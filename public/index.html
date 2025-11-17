@@ -19,6 +19,7 @@
         border: 2px solid #ff007f;
         border-radius: 12px;
         transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
     }
     .series-card:hover {
         transform: scale(1.05);
@@ -39,7 +40,7 @@
 </section>
 
 <section id="seriesGrid" class="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
-    <!-- Series cards will be injected here -->
+    <!-- Series cards injected here -->
 </section>
 
 <footer class="mt-auto text-center">
@@ -48,29 +49,19 @@
 </footer>
 
 <script>
-const API_KEY = '225f2f562d49c4a8d484591f1ae3027c';
 const seriesGrid = document.getElementById('seriesGrid');
 const searchInput = document.getElementById('searchInput');
 
-// Fetch metadata for a single show
-async function fetchShow(id) {
-    try {
-        const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
-        return await res.json();
-    } catch (err) {
-        console.error("Failed fetching show", id, err);
-        return null;
-    }
-}
-
-// Load shows from JSON
+// Fetch shows via serverless API
 async function loadShows() {
-    const res = await fetch('/shows.json');
-    const data = await res.json();
-    const showPromises = data.shows.map(id => fetchShow(id));
-    const shows = await Promise.all(showPromises);
-    const validShows = shows.filter(s => s != null);
-    displaySeries(validShows);
+    try {
+        const res = await fetch('/api/shows');
+        const shows = await res.json();
+        displaySeries(shows);
+    } catch (err) {
+        console.error("Failed to load shows:", err);
+        seriesGrid.innerHTML = '<p class="text-red-500">Failed to load shows. Try again later.</p>';
+    }
 }
 
 // Display series cards
@@ -89,15 +80,17 @@ function displaySeries(seriesArray) {
     });
 }
 
-// Search functionality (filter only selected shows)
+// Filter shows by search query
 searchInput.addEventListener('input', async (e) => {
     const query = e.target.value.toLowerCase();
-    const res = await fetch('/shows.json');
-    const data = await res.json();
-    const showPromises = data.shows.map(id => fetchShow(id));
-    const shows = await Promise.all(showPromises);
-    const filtered = shows.filter(s => s && s.name.toLowerCase().includes(query));
-    displaySeries(filtered);
+    try {
+        const res = await fetch('/api/shows');
+        const shows = await res.json();
+        const filtered = shows.filter(s => s.name.toLowerCase().includes(query));
+        displaySeries(filtered);
+    } catch (err) {
+        console.error("Search failed:", err);
+    }
 });
 
 // Initial load
