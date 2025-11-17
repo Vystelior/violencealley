@@ -2,56 +2,99 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Violence Alley</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Violence Alley - Retro Adult Swim Archive</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-black text-red-500 p-6">
 <header class="text-center mb-8">
-  <h1 class="text-5xl font-bold mb-2 text-red-500">Violence Alley</h1>
-  <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
+  <h1 class="text-5xl font-bold mb-2 text-red-500">Violence Alley</h1>
+  <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
 </header>
 
-<input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8">
-<div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+<main class="flex justify-center">
+  <input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8">
+</main>
+<div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <p id="loading-message" class="col-span-full text-center text-lg text-cyan-400">Loading classic Adult Swim shows...</p>
+</div>
 
 <footer class="text-center mt-12">
-  <a href="request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
-  <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
+  <a href="request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
+  <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
 </footer>
 
 <script src="js/shows.js"></script>
 <script>
-const showContainer = document.getElementById("show-list");
-const searchInput = document.getElementById("search");
-
+// FIX: Moved fetchShow function to a centralized utility file for better organization (see js/utils.js update below)
+// For now, keeping it here for simplicity:
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
+  if (!res.ok) return null; // Handle API errors gracefully
   return res.json();
 }
 
-async function renderShows(filter="") {
-  showContainer.innerHTML = "";
-  for (const show of showList) {
-    const data = await fetchShow(show.tmdb);
-    if (!data.name.toLowerCase().includes(filter.toLowerCase())) continue;
+const showContainer = document.getElementById("show-list");
+const searchInput = document.getElementById("search");
+const loadingMessage = document.getElementById("loading-message");
 
+async function renderShows(filter="") {
+  showContainer.innerHTML = ""; // Clears existing cards
+  
+  if (loadingMessage) {
+    loadingMessage.textContent = "Loading classic Adult Swim shows...";
+    showContainer.appendChild(loadingMessage);
+  }
+
+  // FIX: PERFORMANCE IMPROVEMENT - Use Promise.all to fetch all data concurrently
+  const fetchPromises = showList.map(show => fetchShow(show.tmdb));
+  const allShowData = await Promise.all(fetchPromises);
+
+  if (loadingMessage) loadingMessage.remove(); // Remove loading message after data arrives
+  
+  const filteredData = [];
+
+  for (let i = 0; i < showList.length; i++) {
+    const show = showList[i];
+    const data = allShowData[i];
+
+    // Check for successful data fetch and filter
+    if (!data || !data.name || !data.name.toLowerCase().includes(filter.toLowerCase())) continue;
+    
+    filteredData.push({ show, data });
+  }
+
+  // Render filtered results
+  filteredData.forEach(({ show, data }) => {
     const div = document.createElement("div");
-    div.className = "bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
-    div.innerHTML = `
-      <a href="series.html?id=${show.tmdb}">
-        <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170'}" alt="${data.name}" class="w-full">
-        <div class="p-4">
-          <h2 class="text-xl font-bold text-red-500 mb-1">${data.name}</h2>
-          <p class="text-gray-300 text-sm">${data.overview.substring(0,100)}...</p>
-        </div>
-      </a>
-    `;
-    showContainer.appendChild(div);
+    div.className = "bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
+    div.innerHTML = `
+      <a href="series.html?id=${show.tmdb}">
+                <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170?text=Poster+Missing'}" alt="${data.name}" class="w-full" loading="lazy">
+        <div class="p-4">
+          <h2 class="text-xl font-bold text-red-500 mb-1">${data.name}</h2>
+                    <p class="text-gray-300 text-sm">${data.overview ? data.overview.substring(0,100) + "..." : "No description available."}</p>
+        </div>
+      </a>
+    `;
+    showContainer.appendChild(div);
+  });
+
+  // Handle No Results
+  if (filteredData.length === 0 && filter) {
+      showContainer.innerHTML = `<p class="col-span-full text-center text-lg text-pink-500">No series found matching "${filter}".</p>`;
   }
 }
 
-searchInput.addEventListener("input", e => renderShows(e.target.value));
+// Initial render
 renderShows();
+
+searchInput.addEventListener("input", e => {
+    // FIX: Introduce a slight delay (debounce) to prevent excessive function calls while typing
+    if (window.searchTimer) clearTimeout(window.searchTimer);
+    window.searchTimer = setTimeout(() => {
+        renderShows(e.target.value);
+    }, 300);
+});
 </script>
 </body>
 </html>
