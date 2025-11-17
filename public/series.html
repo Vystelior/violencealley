@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Series - Violence Alley</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-black text-red-500 p-6">
+  <div id="content" class="max-w-3xl mx-auto"></div>
+  <footer class="text-center mt-12">
+    <a href="index.html" class="text-cyan-400 underline">Back to Home</a>
+  </footer>
+
+  <script src="js/shows.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    const show = shows.find(s => s.id.toString() === id);
+
+    const content = document.getElementById("content");
+
+    if (!show) {
+      content.innerHTML = "<p class='text-center text-red-500'>Show not found.</p>";
+    } else {
+      content.innerHTML = `
+        <header class="text-center mb-8">
+          <h1 class="text-4xl font-bold mb-2">${show.name}</h1>
+          <p class="text-cyan-400">${show.overview}</p>
+        </header>
+        <div class="mb-8">
+          <h2 class="text-2xl text-pink-500 mb-2">Episodes</h2>
+          <div id="episodes"></div>
+        </div>
+      `;
+
+      // Dummy: For simplicity, let's assume 1 season, 5 episodes
+      const episodes = Array.from({length:5}, (_,i)=>i+1);
+      const epContainer = document.getElementById("episodes");
+      episodes.forEach(epNum => {
+        const epDiv = document.createElement("div");
+        epDiv.className = "bg-gray-900 p-3 mb-2 rounded hover:bg-red-700 cursor-pointer";
+        epDiv.innerText = `E${epNum}: Episode ${epNum}`;
+        epDiv.addEventListener("click", () => {
+          window.open(`https://111movies.com/tv/${show.imdb}/1/${epNum}`, "_blank");
+        });
+        epContainer.appendChild(epDiv);
+      });
+    }
+  </script>
+</body>
+</html>
