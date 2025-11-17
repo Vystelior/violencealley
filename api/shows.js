@@ -8,9 +8,8 @@ export default async function handler(req, res) {
     const showPromises = showIDs.map(async id => {
         const r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
         const show = await r.json();
-        // Add imdb mapping
-        if(id === 61593) show.imdb = 'tt2950342';
-        if(id === 14769) show.imdb = 'tt1132124';
+        if (id === 61593) show.imdb = 'tt2950342';
+        if (id === 14769) show.imdb = 'tt1132124';
         return show;
     });
 
