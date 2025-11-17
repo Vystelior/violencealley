@@ -6,65 +6,40 @@
 <title>Violence Alley - Retro Adult Swim Archive</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    body {
-        background: linear-gradient(135deg, #111111, #1a1a1a);
-        color: #ff0000;
-        font-family: 'Poppins', sans-serif;
-    }
-    .neon-title {
-        text-shadow: 0 0 5px #ff0000, 0 0 10px #ff007f, 0 0 20px #00ffff;
-    }
-    .series-card {
-        background-color: #1a1a1a;
-        border: 2px solid #ff007f;
-        border-radius: 12px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-    }
-    .series-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 20px #ff0000, 0 0 30px #00ffff;
-    }
+body { background:#111; color:#ff0000; font-family:'Poppins',sans-serif; }
+.neon-title { text-shadow:0 0 5px #ff0000,0 0 10px #ff007f,0 0 20px #00ffff; }
+.series-card { background:#1a1a1a; border:2px solid #ff007f; border-radius:12px; transition:0.2s; cursor:pointer; }
+.series-card:hover { transform:scale(1.05); box-shadow:0 0 20px #ff0000,0 0 30px #00ffff; }
 </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-6">
 
 <header class="mb-8 text-center">
-    <h1 class="text-5xl neon-title font-bold mb-2">Violence Alley</h1>
-    <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
+<h1 class="text-5xl neon-title font-bold mb-2">Violence Alley</h1>
+<p class="text-cyan-400">Retro Adult Swim streaming archive</p>
 </header>
 
 <section class="w-full max-w-xl mb-8">
-    <input type="text" id="searchInput" placeholder="Search series..." 
-        class="w-full p-3 rounded-lg border-2 border-pink-600 bg-black text-white focus:outline-none focus:border-cyan-400">
+<input type="text" id="searchInput" placeholder="Search series..." class="w-full p-3 rounded-lg border-2 border-pink-600 bg-black text-white focus:outline-none focus:border-cyan-400">
 </section>
 
-<section id="seriesGrid" class="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
-    <!-- Series cards injected here -->
-</section>
+<section id="seriesGrid" class="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12"></section>
 
 <footer class="mt-auto text-center">
-    <a href="/request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
-    <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley. Retro Adult Swim Archive.</p>
+<a href="/request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
+<p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley. Retro Adult Swim Archive.</p>
 </footer>
 
 <script>
 const seriesGrid = document.getElementById('seriesGrid');
 const searchInput = document.getElementById('searchInput');
 
-// Fetch shows via serverless API
 async function loadShows() {
-    try {
-        const res = await fetch('/api/shows');
-        const shows = await res.json();
-        displaySeries(shows);
-    } catch (err) {
-        console.error("Failed to load shows:", err);
-        seriesGrid.innerHTML = '<p class="text-red-500">Failed to load shows. Try again later.</p>';
-    }
+    const res = await fetch('/api/shows');
+    const shows = await res.json();
+    displaySeries(shows);
 }
 
-// Display series cards
 function displaySeries(seriesArray) {
     seriesGrid.innerHTML = '';
     seriesArray.forEach(series => {
@@ -76,26 +51,22 @@ function displaySeries(seriesArray) {
             <h2 class="text-xl font-bold text-red-500 mb-1">${series.name}</h2>
             <p class="text-gray-300 text-sm">${series.overview.substring(0, 100)}...</p>
         `;
+        card.onclick = () => {
+            window.location.href = `/pages/series.js?id=${series.id}`;
+        };
         seriesGrid.appendChild(card);
     });
 }
 
-// Filter shows by search query
 searchInput.addEventListener('input', async (e) => {
     const query = e.target.value.toLowerCase();
-    try {
-        const res = await fetch('/api/shows');
-        const shows = await res.json();
-        const filtered = shows.filter(s => s.name.toLowerCase().includes(query));
-        displaySeries(filtered);
-    } catch (err) {
-        console.error("Search failed:", err);
-    }
+    const res = await fetch('/api/shows');
+    const shows = await res.json();
+    const filtered = shows.filter(s => s.name.toLowerCase().includes(query));
+    displaySeries(filtered);
 });
 
-// Initial load
 loadShows();
 </script>
-
 </body>
 </html>
