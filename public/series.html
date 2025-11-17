@@ -5,9 +5,9 @@
 <title>Series - Violence Alley</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 <style>
-  body { font-family: "Courier New", monospace; }
-  .episode-card { transition: transform 0.2s; }
-  .episode-card:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(255,0,0,0.7); }
+body { font-family: "Courier New", monospace; }
+.episode-card { transition: transform 0.2s; }
+.episode-card:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(255,0,0,0.7); }
 </style>
 </head>
 <body class="bg-black text-red-500 p-6 min-h-screen">
@@ -20,7 +20,6 @@
 
 <script src="js/shows.js"></script>
 <script>
-const API_KEY = window.API_KEY || "<PLACEHOLDER>"; // Will be replaced in build/deploy
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get('id');
 const showInfo = showList.find(s => s.tmdb.toString() === id);
@@ -31,12 +30,12 @@ if (!showInfo) {
 } else {
 
   async function fetchShow(tmdbId) {
-    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&language=en-US`);
+    const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
     return res.json();
   }
 
   async function fetchSeason(tmdbId, seasonNum) {
-    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNum}?api_key=${API_KEY}&language=en-US`);
+    const res = await fetch(`/api/tmdb?type=season&id=${tmdbId}&season=${seasonNum}`);
     return res.json();
   }
 
@@ -90,11 +89,6 @@ if (!showInfo) {
     }
   })();
 }
-</script>
-
-<script>
-  // Pass the Vercel public env variable to JS
-  window.API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 </script>
 </body>
 </html>
