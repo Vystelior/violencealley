@@ -1,51 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Violence Alley</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Violence Alley</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-black text-red-500 p-6">
-  <header class="text-center mb-8">
-    <h1 class="text-5xl font-bold mb-2 text-red-500">Violence Alley</h1>
-    <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
-  </header>
 
-  <input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8">
+<header class="text-center mb-8">
+  <h1 class="text-5xl font-bold mb-2 text-red-500">Violence Alley</h1>
+  <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
+</header>
 
-  <div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+<input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8">
 
-  <footer class="text-center mt-12">
-    <a href="request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
-    <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
-  </footer>
+<div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
 
-  <script src="js/shows.js"></script>
-  <script>
-    const showList = document.getElementById('show-list');
-    const searchInput = document.getElementById('search');
+<footer class="text-center mt-12">
+  <a href="request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
+  <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
+</footer>
 
-    function renderShows(filter="") {
-      showList.innerHTML = "";
-      shows.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()))
-           .forEach(show => {
-        const div = document.createElement("div");
-        div.className = "bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
-        div.innerHTML = `
-          <a href="series.html?id=${show.id}">
-            <img src="${show.poster}" alt="${show.name}" class="w-full">
-            <div class="p-4">
-              <h2 class="text-xl font-bold text-red-500 mb-1">${show.name}</h2>
-              <p class="text-gray-300 text-sm">${show.overview.substring(0,100)}...</p>
-            </div>
-          </a>
-        `;
-        showList.appendChild(div);
-      });
-    }
+<script src="js/shows.js"></script>
+<script>
+const API_KEY = "225f2f562d49c4a8d484591f1ae3027c";
+const showContainer = document.getElementById("show-list");
+const searchInput = document.getElementById("search");
 
-    searchInput.addEventListener("input", e => renderShows(e.target.value));
-    renderShows();
-  </script>
+async function fetchShow(tmdbId) {
+  const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&language=en-US`);
+  return res.json();
+}
+
+async function renderShows(filter="") {
+  showContainer.innerHTML = "";
+  for (const show of showList) {
+    const data = await fetchShow(show.tmdb);
+    if (!data.name.toLowerCase().includes(filter.toLowerCase())) continue;
+
+    const div = document.createElement("div");
+    div.className = "bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
+    div.innerHTML = `
+      <a href="series.html?id=${show.tmdb}">
+        <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170'}" alt="${data.name}" class="w-full">
+        <div class="p-4">
+          <h2 class="text-xl font-bold text-red-500 mb-1">${data.name}</h2>
+          <p class="text-gray-300 text-sm">${data.overview.substring(0,100)}...</p>
+        </div>
+      </a>
+    `;
+    showContainer.appendChild(div);
+  }
+}
+
+searchInput.addEventListener("input", e => renderShows(e.target.value));
+renderShows();
+</script>
 </body>
 </html>
