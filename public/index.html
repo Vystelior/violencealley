@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Violence Alley - Retro Adult Swim Archive</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body {
+        background: linear-gradient(135deg, #111111, #1a1a1a);
+        color: #ff0000;
+        font-family: 'Poppins', sans-serif;
+    }
+    .neon-title {
+        text-shadow: 0 0 5px #ff0000, 0 0 10px #ff007f, 0 0 20px #00ffff;
+    }
+    .series-card {
+        background-color: #1a1a1a;
+        border: 2px solid #ff007f;
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .series-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px #ff0000, 0 0 30px #00ffff;
+    }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6">
+
+<header class="mb-8 text-center">
+    <h1 class="text-5xl neon-title font-bold mb-2">Violence Alley</h1>
+    <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
+</header>
+
+<section class="w-full max-w-xl mb-8">
+    <input type="text" id="searchInput" placeholder="Search series..." 
+        class="w-full p-3 rounded-lg border-2 border-pink-600 bg-black text-white focus:outline-none focus:border-cyan-400">
+</section>
+
+<section id="seriesGrid" class="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+    <!-- Series cards will be injected here -->
+</section>
+
+<footer class="mt-auto text-center">
+    <a href="/request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
+    <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley. Retro Adult Swim Archive.</p>
+</footer>
+
+<script>
+const API_KEY = '225f2f562d49c4a8d484591f1ae3027c';
+const seriesGrid = document.getElementById('seriesGrid');
+const searchInput = document.getElementById('searchInput');
+
+// Fetch TMDb metadata for a single show
+async function fetchShow(id) {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
+    return await res.json();
+}
+
+// Load the JSON with selected show IDs
+async function loadShows() {
+    const res = await fetch('/shows.json');
+    const data = await res.json();
+    const showPromises = data.shows.map(id => fetchShow(id));
+    const shows = await Promise.all(showPromises);
+    displaySeries(shows);
+}
+
+// Display series cards
+function displaySeries(seriesArray) {
+    seriesGrid.innerHTML = '';
+    seriesArray.forEach(series => {
+        const imgPath = series.poster_path ? `https://image.tmdb.org/t/p/w300${series.poster_path}` : 'https://via.placeholder.com/300x170.png?text=No+Image';
+        const card = document.createElement('div');
+        card.className = 'series-card p-4';
+        card.innerHTML = `
+            <img src="${imgPath}" alt="${series.name}" class="w-full mb-2 rounded">
+            <h2 class="text-xl font-bold text-red-500 mb-1">${series.name}</h2>
+            <p class="text-gray-300 text-sm">${series.overview.substring(0, 100)}...</p>
+        `;
+        seriesGrid.appendChild(card);
+    });
+}
+
+// Search functionality (filters only the selected shows)
+searchInput.addEventListener('input', async (e) => {
+    const query = e.target.value.toLowerCase();
+    if (!query) return loadShows();
+
+    const res = await fetch('/shows.json');
+    const data = await res.json();
+    const showPromises = data.shows.map(id => fetchShow(id));
+    const shows = await Promise.all(showPromises);
+    const filtered = shows.filter(show => show.name.toLowerCase().includes(query));
+    displaySeries(filtered);
+});
+
+// Initial load
+loadShows();
+</script>
+
+</body>
+</html>
