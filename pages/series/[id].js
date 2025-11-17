@@ -15,14 +15,9 @@ export default function SeriesPage() {
       const shows = await res.json();
       const selectedShow = shows.find(s => s.id.toString() === id.toString());
       if (!selectedShow) return;
-      
-      // Add IMDb mapping
-      if(selectedShow.id === 61593) selectedShow.imdb = 'tt2950342';
-      if(selectedShow.id === 14769) selectedShow.imdb = 'tt1132124';
-      
+
       setShow(selectedShow);
 
-      // Fetch all seasons
       const seasonPromises = selectedShow.seasons.map(async season => {
         const r = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${season.season_number}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US`);
         return await r.json();
@@ -53,7 +48,8 @@ export default function SeriesPage() {
                 key={ep.id}
                 className="bg-gray-900 p-3 mb-2 rounded hover:bg-red-700 cursor-pointer"
                 onClick={() => {
-                  const url = `https://111movies.com/tv/${show.imdb}/${season.season_number}/${ep.episode_number}`;
+                  const imdb = show.imdb;
+                  const url = `https://111movies.com/tv/${imdb}/${season.season_number}/${ep.episode_number}`;
                   window.open(url, '_blank');
                 }}
               >
