@@ -1,51 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Series - Violence Alley</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<title>Series - Violence Alley</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-black text-red-500 p-6">
-  <div id="content" class="max-w-3xl mx-auto"></div>
-  <footer class="text-center mt-12">
-    <a href="index.html" class="text-cyan-400 underline">Back to Home</a>
-  </footer>
 
-  <script src="js/shows.js"></script>
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const show = shows.find(s => s.id.toString() === id);
+<div id="content" class="max-w-3xl mx-auto"></div>
 
-    const content = document.getElementById("content");
+<footer class="text-center mt-12">
+  <a href="index.html" class="text-cyan-400 underline">Back to Home</a>
+</footer>
 
-    if (!show) {
-      content.innerHTML = "<p class='text-center text-red-500'>Show not found.</p>";
-    } else {
-      content.innerHTML = `
-        <header class="text-center mb-8">
-          <h1 class="text-4xl font-bold mb-2">${show.name}</h1>
-          <p class="text-cyan-400">${show.overview}</p>
-        </header>
-        <div class="mb-8">
-          <h2 class="text-2xl text-pink-500 mb-2">Episodes</h2>
-          <div id="episodes"></div>
-        </div>
-      `;
+<script src="js/shows.js"></script>
+<script>
+const API_KEY = "225f2f562d49c4a8d484591f1ae3027c";
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('id');
+const showInfo = showList.find(s => s.tmdb.toString() === id);
 
-      // Dummy: For simplicity, let's assume 1 season, 5 episodes
-      const episodes = Array.from({length:5}, (_,i)=>i+1);
-      const epContainer = document.getElementById("episodes");
-      episodes.forEach(epNum => {
+const content = document.getElementById("content");
+
+if (!showInfo) {
+  content.innerHTML = "<p class='text-center text-red-500'>Show not found.</p>";
+} else {
+  async function fetchShow(tmdbId) {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&language=en-US`);
+    return res.json();
+  }
+
+  async function fetchSeason(tmdbId, seasonNum) {
+    const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNum}?api_key=${API_KEY}&language=en-US`);
+    return res.json();
+  }
+
+  (async () => {
+    const showData = await fetchShow(id);
+    content.innerHTML = `
+      <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-2">${showData.name}</h1>
+        <p class="text-cyan-400">${showData.overview}</p>
+      </header>
+    `;
+
+    const episodesContainer = document.createElement("div");
+    content.appendChild(episodesContainer);
+
+    for (const season of showData.seasons) {
+      if (!season.season_number) continue;
+      const seasonData = await fetchSeason(id, season.season_number);
+
+      const seasonDiv = document.createElement("div");
+      seasonDiv.className = "mb-8";
+      seasonDiv.innerHTML = `<h2 class="text-2xl text-pink-500 mb-2">Season ${season.season_number}</h2>`;
+      episodesContainer.appendChild(seasonDiv);
+
+      seasonData.episodes.forEach(ep => {
         const epDiv = document.createElement("div");
         epDiv.className = "bg-gray-900 p-3 mb-2 rounded hover:bg-red-700 cursor-pointer";
-        epDiv.innerText = `E${epNum}: Episode ${epNum}`;
+        epDiv.innerText = `E${ep.episode_number}: ${ep.name}`;
         epDiv.addEventListener("click", () => {
-          window.open(`https://111movies.com/tv/${show.imdb}/1/${epNum}`, "_blank");
+          const url = `https://111movies.com/tv/${showInfo.imdb}/${season.season_number}/${ep.episode_number}`;
+          window.open(url, "_blank");
         });
-        epContainer.appendChild(epDiv);
+        seasonDiv.appendChild(epDiv);
       });
     }
-  </script>
+  })();
+}
+</script>
 </body>
 </html>
