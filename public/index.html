@@ -52,19 +52,25 @@ const API_KEY = '225f2f562d49c4a8d484591f1ae3027c';
 const seriesGrid = document.getElementById('seriesGrid');
 const searchInput = document.getElementById('searchInput');
 
-// Fetch TMDb metadata for a single show
+// Fetch metadata for a single show
 async function fetchShow(id) {
-    const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
-    return await res.json();
+    try {
+        const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
+        return await res.json();
+    } catch (err) {
+        console.error("Failed fetching show", id, err);
+        return null;
+    }
 }
 
-// Load the JSON with selected show IDs
+// Load shows from JSON
 async function loadShows() {
     const res = await fetch('/shows.json');
     const data = await res.json();
     const showPromises = data.shows.map(id => fetchShow(id));
     const shows = await Promise.all(showPromises);
-    displaySeries(shows);
+    const validShows = shows.filter(s => s != null);
+    displaySeries(validShows);
 }
 
 // Display series cards
@@ -83,16 +89,14 @@ function displaySeries(seriesArray) {
     });
 }
 
-// Search functionality (filters only the selected shows)
+// Search functionality (filter only selected shows)
 searchInput.addEventListener('input', async (e) => {
     const query = e.target.value.toLowerCase();
-    if (!query) return loadShows();
-
     const res = await fetch('/shows.json');
     const data = await res.json();
     const showPromises = data.shows.map(id => fetchShow(id));
     const shows = await Promise.all(showPromises);
-    const filtered = shows.filter(show => show.name.toLowerCase().includes(query));
+    const filtered = shows.filter(s => s && s.name.toLowerCase().includes(query));
     displaySeries(filtered);
 });
 
