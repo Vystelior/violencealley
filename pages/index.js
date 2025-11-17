@@ -7,20 +7,14 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchShows() {
-      try {
-        const res = await fetch('/api/shows');
-        const data = await res.json();
-        setShows(data);
-      } catch (err) {
-        console.error('Failed to fetch shows:', err);
-      }
+      const res = await fetch('/api/shows');
+      const data = await res.json();
+      setShows(data);
     }
     fetchShows();
   }, []);
 
-  const filteredShows = shows.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredShows = shows.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-black text-red-500 p-6 flex flex-col items-center">
@@ -29,17 +23,15 @@ export default function Home() {
         <p className="text-cyan-400">Retro Adult Swim streaming archive</p>
       </header>
 
-      <section className="w-full max-w-xl mb-8">
-        <input
-          type="text"
-          placeholder="Search series..."
-          className="w-full p-3 rounded-lg border-2 border-pink-600 bg-black text-white focus:outline-none focus:border-cyan-400"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </section>
+      <input
+        type="text"
+        placeholder="Search series..."
+        className="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8 focus:outline-none focus:border-cyan-400"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
 
-      <section className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
+      <section className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredShows.map(show => (
           <Link key={show.id} href={`/series/${show.id}`}>
             <a className="block bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform">
@@ -57,11 +49,9 @@ export default function Home() {
         ))}
       </section>
 
-      <footer className="text-center mt-auto">
-        <Link href="/request">
-          <a className="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
-        </Link>
-        <p className="text-gray-400 mt-2 text-sm">© 2025 Violence Alley. Retro Adult Swim Archive.</p>
+      <footer className="text-center mt-12">
+        <Link href="/request"><a className="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a></Link>
+        <p className="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
       </footer>
     </div>
   );
