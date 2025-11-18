@@ -7,5 +7,6 @@ const showList = [
   { tmdb: 14769, imdb: "tt1132124" }, // Xavier: Renegade Angel
   { tmdb: 60625, imdb: "tt2861424" }, // rick and morty
   { tmdb: 709, imdb: "tt0437745" },   // robot chicken
-  { tmdb: 539, imdb: "tt0457146" }    // squidbillies
+  { tmdb: 539, imdb: "tt0457146" },   // squidbillies
+  { tmdb: 251, imdb: "tt0297494" }    // aqua teen hunger force
 ];
