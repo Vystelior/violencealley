@@ -2,63 +2,89 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Series - Violence Alley</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Series - Violence Alley</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 <style>
+/* Global Styling from index.html (Ensures consistency) */
 body {
-  font-family: "Courier New", monospace;
-  background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
+    font-family: 'Courier New', monospace; 
+    background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
+    color: #f0f0f0; 
+    min-height: 100vh;
 }
 .neon-text {
-  text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0066, 0 0 20px #ff00cc;
+    color: #fff;
+    text-shadow: 
+        0 0 5px #ff0000, 
+        0 0 10px #ff0066, 
+        0 0 20px #ff00cc, 
+        0 0 40px rgba(255, 0, 102, 0.4);
 }
-.episode-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  background: #111;
+.interactive-card {
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    background: #111;
 }
-.episode-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 20px #ff0044, 0 0 40px #ff00aa;
+.interactive-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(255, 0, 68, 0.8), 0 0 30px rgba(255, 0, 170, 0.5);
 }
-button {
-  transition: background 0.2s;
-}
-/* FIX: Updated video player styling for iframe */
+/* Specific Video Player Styles */
 #video-player {
-  width: 100%;
-  max-width: 800px;
-  margin: 20px auto;
-  border: 4px solid #ff0055;
-  border-radius: 8px;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    border: 4px solid #ff0055;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+/* Scanline effect for VHS feel */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        transparent 0,
+        rgba(255, 0, 68, 0.05) 1px,
+        transparent 2px
+    );
+    opacity: 0.1;
+    z-index: 9999;
+}
+/* Watch button transition */
+button {
+    transition: background 0.2s;
 }
 </style>
 </head>
-<body class="text-red-500 p-6 min-h-screen">
+<body class="p-6 min-h-screen">
 
 <div id="content" class="max-w-5xl mx-auto">
   <p id="loading-indicator" class="text-center text-xl text-pink-500">Loading series details...</p>
 </div>
 
 <div id="video-player" class="hidden">
-  <iframe id="player" src="" allowfullscreen class="w-full rounded" style="aspect-ratio: 16 / 9; border: none;"></iframe>
+    <iframe id="player" src="" allowfullscreen class="w-full rounded" style="aspect-ratio: 16 / 9; border: none;"></iframe>
 </div>
 
 <footer class="text-center mt-12">
-  <a href="index.html" class="text-cyan-400 underline">Back to Home</a>
+  <a href="index.html" class="text-cyan-400 underline hover:text-pink-500">Back to Home</a>
 </footer>
 
 <script src="js/shows.js"></script>
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get('id');
-// FIX: Added parseInt() to ensure ID comparison is safe
-const showInfo = showList.find(s => s.tmdb === parseInt(id)); 
+const showInfo = showList.find(s => s.tmdb === parseInt(id));
 const content = document.getElementById("content");
 const videoPlayer = document.getElementById("video-player");
 const loadingIndicator = document.getElementById("loading-indicator");
-const iframePlayer = document.getElementById("player"); // Reference to the new iframe
+const iframePlayer = document.getElementById("player"); 
 
-// FIX: Moved fetchShow and fetchSeason to utility functions (or would be if centralized)
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
   if (!res.ok) return null;
@@ -78,7 +104,6 @@ if (!showInfo) {
   (async () => {
     const showData = await fetchShow(id);
 
-    // Remove loading indicator now that data has arrived
     if (loadingIndicator) loadingIndicator.remove(); 
 
     if (!showData || showData.success === false) {
@@ -88,7 +113,7 @@ if (!showInfo) {
 
     content.innerHTML = `
       <header class="text-center mb-8">
-        <h1 class="text-5xl font-bold mb-2 text-red-500 neon-text">${showData.name}</h1>
+        <h1 class="text-5xl font-bold mb-2 neon-text">${showData.name}</h1>
         <p class="text-cyan-400 max-w-3xl mx-auto">${showData.overview}</p>
       </header>
     `;
@@ -97,19 +122,17 @@ if (!showInfo) {
     episodesContainer.className = "space-y-6";
     content.appendChild(episodesContainer);
     
-    // FIX: Filter out special season 0 and create promises for concurrent fetching
     const validSeasons = showData.seasons.filter(s => s.season_number >= 1);
     const seasonFetchPromises = validSeasons.map(season => fetchSeason(id, season.season_number));
     
-    // FIX: PERFORMANCE IMPROVEMENT - Wait for all season data to load concurrently
+    // Concurrent fetching for performance
     const allSeasonData = await Promise.all(seasonFetchPromises);
 
-    // Process season data
     for (let i = 0; i < validSeasons.length; i++) {
       const season = validSeasons[i];
       const seasonData = allSeasonData[i];
 
-      if (!seasonData || !seasonData.episodes || seasonData.episodes.length === 0) continue; // Skip if no episode data
+      if (!seasonData || !seasonData.episodes || seasonData.episodes.length === 0) continue; 
 
       const seasonDiv = document.createElement("div");
       seasonDiv.className = "mb-8";
@@ -122,27 +145,26 @@ if (!showInfo) {
 
       seasonData.episodes.forEach(ep => {
         const epCard = document.createElement("div");
-        epCard.className = "episode-card p-3 rounded-lg border border-pink-600 hover:border-red-500";
+        
+        // Applied the global interactive-card class
+        epCard.className = "interactive-card p-3 rounded-lg border border-pink-600 hover:border-red-500";
 
         const epThumbnail = ep.still_path ? `https://image.tmdb.org/t/p/w300${ep.still_path}` : 'https://via.placeholder.com/300x170?text=No+Image';
 
         epCard.innerHTML = `
-                    <img src="${epThumbnail}" alt="${ep.name}" class="w-full rounded mb-2" loading="lazy">
+          <img src="${epThumbnail}" alt="${ep.name}" class="w-full rounded mb-2" loading="lazy">
           <h3 class="text-xl font-bold text-red-500 mb-1">${ep.name}</h3>
           <p class="text-gray-300 text-sm mb-2">${ep.overview ? ep.overview.substring(0,120) + "..." : "No description available."}</p>
           <button class="bg-red-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded w-full">Watch</button>
         `;
 
         epCard.querySelector("button").addEventListener("click", () => {
-          // Update player to show episode inline
-          // Ensure 'showInfo.imdb' is present before using the URL
-          if (!showInfo.imdb) {
+          if (!showInfo.imdb) {
               alert("Error: IMDB ID not configured for this show.");
               return;
           }
           const url = `https://vidfast.pro/tv/${showInfo.imdb}/${season.season_number}/${ep.episode_number}?autoPlay=true&autoNext=true`;
           
-          // FIX: Set the iframe's src
           iframePlayer.src = url;
           videoPlayer.classList.remove("hidden");
           window.scrollTo({ top: videoPlayer.offsetTop - 20, behavior: "smooth" });
