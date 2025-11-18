@@ -3,72 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Violence Alley - Retro Adult Swim Archive</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
-<style>
-/* Global Styling for Retro/Cyberpunk Aesthetic */
-body {
-    font-family: 'Courier New', monospace; 
-    background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
-    color: #f0f0f0; /* Default text color */
-    min-height: 100vh;
-}
-.neon-text {
-    color: #fff;
-    text-shadow: 
-        0 0 5px #ff0000, 
-        0 0 10px #ff0066, 
-        0 0 20px #ff00cc, 
-        0 0 40px rgba(255, 0, 102, 0.4);
-}
-.interactive-card {
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-    background: #111; /* Dark background for cards */
-}
-.interactive-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 15px rgba(255, 0, 68, 0.8), 0 0 30px rgba(255, 0, 170, 0.5); 
-}
-/* Subtle Scanline Overlay for VHS feel */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-        transparent 0,
-        rgba(255, 0, 68, 0.05) 1px,
-        transparent 2px
-    );
-    opacity: 0.1;
-    z-index: 9999;
-}
-</style>
+<title>Violence Alley - Adult Swim Archive</title>
+<link href="css/style.css" rel="stylesheet">
 </head>
-<body class="p-6">
-<header class="text-center mb-8">
-    <h1 class="text-5xl font-bold mb-2 neon-text">Violence Alley</h1>
-  <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
-</header>
+<body>
 
-<main class="flex justify-center">
-    <input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-cyan-400 mb-8" style="font-family: 'Courier New', monospace;">
-</main>
-<div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-  <p id="loading-message" class="col-span-full text-center text-lg text-cyan-400">Loading classic Adult Swim shows...</p>
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <a href="index.html" class="navbar-logo">Violence Alley</a>
+    <ul class="navbar-links" id="navbar-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="#series">Series</a></li>
+      <li><a href="request.html">Requests</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="request.html" class="btn-primary">Submit Request</a>
+    </div>
+    <button class="mobile-menu-toggle" aria-controls="navbar-links" aria-expanded="false" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="container">
+  <section class="hero">
+    <h1 class="hero-title">Violence Alley</h1>
+    <p class="hero-subtitle">Your retro Adult Swim streaming archive</p>
+    
+    <div class="search-container">
+      <input 
+        id="search" 
+        type="text" 
+        class="search-input" 
+        placeholder="Search for series..."
+      >
+    </div>
+  </section>
+
+  <!-- Series Grid -->
+  <section class="section" id="series">
+    <h2 class="section-title">Browse Series</h2>
+    <div id="show-list" class="grid">
+      <p id="loading-message" class="loading">Loading series...</p>
+    </div>
+  </section>
 </div>
 
-<footer class="text-center mt-12">
-  <a href="request.html" class="text-pink-500 hover:text-cyan-400 font-bold underline">Request a Series / Episode</a>
-  <p class="text-gray-400 mt-2 text-sm">© 2025 Violence Alley</p>
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p><a href="request.html">Request a Series</a></p>
+    <p class="footer-copyright">© 2025 Violence Alley</p>
+  </div>
 </footer>
+
+<script>
+// Mobile Menu Toggle with Accessibility
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileToggle = document.querySelector('.mobile-menu-toggle');
+  const navLinks = document.querySelector('.navbar-links');
+  
+  if (mobileToggle && navLinks) {
+    mobileToggle.addEventListener('click', function() {
+      const isExpanded = navLinks.classList.toggle('mobile-active');
+      mobileToggle.setAttribute('aria-expanded', isExpanded);
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && navLinks.classList.contains('mobile-active')) {
+        navLinks.classList.remove('mobile-active');
+        mobileToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+});
+</script>
 
 <script src="js/shows.js"></script>
 <script>
-// NOTE: fetchShow and rendering logic remains the same (using concurrent fetching)
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
   if (!res.ok) return null;
@@ -79,58 +92,73 @@ const showContainer = document.getElementById("show-list");
 const searchInput = document.getElementById("search");
 const loadingMessage = document.getElementById("loading-message");
 
-async function renderShows(filter="") {
-  showContainer.innerHTML = "";
+async function renderShows(filter = "") {
+  showContainer.innerHTML = "";
   
   if (loadingMessage) {
-    loadingMessage.textContent = "Loading classic Adult Swim shows...";
+    loadingMessage.textContent = "Loading series...";
     showContainer.appendChild(loadingMessage);
   }
 
   const fetchPromises = showList.map(show => fetchShow(show.tmdb));
   const allShowData = await Promise.all(fetchPromises);
 
-  if (loadingMessage) loadingMessage.remove(); 
-  
+  if (loadingMessage) loadingMessage.remove();
+  
   const filteredData = [];
 
-  for (let i = 0; i < showList.length; i++) {
-    const show = showList[i];
-    const data = allShowData[i];
+  for (let i = 0; i < showList.length; i++) {
+    const show = showList[i];
+    const data = allShowData[i];
 
-    if (!data || !data.name || !data.name.toLowerCase().includes(filter.toLowerCase())) continue;
+    if (!data || !data.name || !data.name.toLowerCase().includes(filter.toLowerCase())) continue;
     
     filteredData.push({ show, data });
   }
 
-  filteredData.forEach(({ show, data }) => {
-    const div = document.createElement("div");
-    // Applied the global interactive-card class
-    div.className = "interactive-card rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
-    div.innerHTML = `
-      <a href="series.html?id=${show.tmdb}">
-        <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170?text=Poster+Missing'}" alt="${data.name}" class="w-full" loading="lazy">
-        <div class="p-4">
-          <h2 class="text-xl font-bold text-red-500 mb-1">${data.name}</h2>
-          <p class="text-gray-300 text-sm">${data.overview ? data.overview.substring(0,100) + "..." : "No description available."}</p>
-        </div>
-      </a>
-    `;
-    showContainer.appendChild(div);
-  });
-
-  if (filteredData.length === 0 && filter) {
-      showContainer.innerHTML = `<p class="col-span-full text-center text-lg text-pink-500">No series found matching "${filter}".</p>`;
+  if (filteredData.length === 0) {
+    showContainer.innerHTML = `<p class="loading">No series found matching "${filter}"</p>`;
+    return;
   }
+
+  filteredData.forEach(({ show, data }) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    
+    const posterUrl = data.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${data.poster_path}` 
+      : 'https://via.placeholder.com/500x750?text=No+Poster';
+    
+    const year = data.first_air_date ? new Date(data.first_air_date).getFullYear() : '';
+    const seasons = data.number_of_seasons ? `${data.number_of_seasons} Season${data.number_of_seasons > 1 ? 's' : ''}` : '';
+    
+    card.innerHTML = `
+      <a href="series.html?id=${show.tmdb}">
+        <div class="card-image-wrapper card-poster">
+          <img src="${posterUrl}" alt="${data.name}" class="card-image" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">${data.name}</h3>
+          <p class="card-description">${data.overview || "No description available."}</p>
+          <div class="card-meta">
+            ${year ? `<span>${year}</span>` : ''}
+            ${seasons ? `<span>•</span><span>${seasons}</span>` : ''}
+          </div>
+        </div>
+      </a>
+    `;
+    
+    showContainer.appendChild(card);
+  });
 }
 
 renderShows();
 
 searchInput.addEventListener("input", e => {
-    if (window.searchTimer) clearTimeout(window.searchTimer);
-    window.searchTimer = setTimeout(() => {
-        renderShows(e.target.value);
-    }, 300);
+  if (window.searchTimer) clearTimeout(window.searchTimer);
+  window.searchTimer = setTimeout(() => {
+    renderShows(e.target.value);
+  }, 300);
 });
 </script>
 </body>

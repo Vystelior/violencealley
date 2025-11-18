@@ -4,76 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Series - Violence Alley</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
-<style>
-/* Global Styling from index.html (Ensures consistency) */
-body {
-    font-family: 'Courier New', monospace; 
-    background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
-    color: #f0f0f0; 
-    min-height: 100vh;
-}
-.neon-text {
-    color: #fff;
-    text-shadow: 
-        0 0 5px #ff0000, 
-        0 0 10px #ff0066, 
-        0 0 20px #ff00cc, 
-        0 0 40px rgba(255, 0, 102, 0.4);
-}
-.interactive-card {
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-    background: #111;
-}
-.interactive-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 15px rgba(255, 0, 68, 0.8), 0 0 30px rgba(255, 0, 170, 0.5);
-}
-/* Specific Video Player Styles */
-#video-player {
-    width: 100%;
-    max-width: 800px;
-    margin: 20px auto;
-    border: 4px solid #ff0055;
-    border-radius: 8px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-}
-/* Scanline effect for VHS feel */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-        transparent 0,
-        rgba(255, 0, 68, 0.05) 1px,
-        transparent 2px
-    );
-    opacity: 0.1;
-    z-index: 9999;
-}
-/* Watch button transition */
-button {
-    transition: background 0.2s;
-}
-</style>
+<link href="css/style.css" rel="stylesheet">
 </head>
-<body class="p-6 min-h-screen">
+<body>
 
-<div id="content" class="max-w-5xl mx-auto">
-  <p id="loading-indicator" class="text-center text-xl text-pink-500">Loading series details...</p>
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <a href="index.html" class="navbar-logo">Violence Alley</a>
+    <ul class="navbar-links" id="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#series">Series</a></li>
+      <li><a href="request.html">Requests</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="request.html" class="btn-primary">Submit Request</a>
+    </div>
+    <button class="mobile-menu-toggle" aria-controls="navbar-links" aria-expanded="false" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
+
+<!-- Content -->
+<div class="container">
+  <div id="content">
+    <p id="loading-indicator" class="loading">Loading series details...</p>
+  </div>
 </div>
 
-<div id="video-player" class="hidden">
-    <iframe id="player" src="" allowfullscreen class="w-full rounded" style="aspect-ratio: 16 / 9; border: none;"></iframe>
+<!-- Video Player Overlay -->
+<div id="video-player" class="video-player-overlay hidden">
+  <div class="video-player-container">
+    <button class="video-player-close" onclick="closePlayer()">✕ Close</button>
+    <iframe 
+      id="player" 
+      class="video-player-iframe"
+      src="" 
+      allowfullscreen 
+      allow="autoplay; fullscreen; picture-in-picture"
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-presentation"
+    ></iframe>
+  </div>
 </div>
 
-<footer class="text-center mt-12">
-  <a href="index.html" class="text-cyan-400 underline hover:text-pink-500">Back to Home</a>
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p><a href="index.html">← Back to Home</a></p>
+    <p class="footer-copyright">© 2025 Violence Alley</p>
+  </div>
 </footer>
+
+<script>
+// Mobile Menu Toggle with Accessibility
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileToggle = document.querySelector('.mobile-menu-toggle');
+  const navLinks = document.querySelector('.navbar-links');
+  
+  if (mobileToggle && navLinks) {
+    mobileToggle.addEventListener('click', function() {
+      const isExpanded = navLinks.classList.toggle('mobile-active');
+      mobileToggle.setAttribute('aria-expanded', isExpanded);
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && navLinks.classList.contains('mobile-active')) {
+        navLinks.classList.remove('mobile-active');
+        mobileToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+});
+</script>
 
 <script src="js/shows.js"></script>
 <script>
@@ -83,97 +85,107 @@ const showInfo = showList.find(s => s.tmdb === parseInt(id));
 const content = document.getElementById("content");
 const videoPlayer = document.getElementById("video-player");
 const loadingIndicator = document.getElementById("loading-indicator");
-const iframePlayer = document.getElementById("player"); 
+const iframePlayer = document.getElementById("player");
+
+function closePlayer() {
+  videoPlayer.classList.add("hidden");
+  iframePlayer.src = "";
+  document.body.style.overflow = "auto";
+}
 
 async function fetchShow(tmdbId) {
-  const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
-  if (!res.ok) return null;
-  return res.json();
+  const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
+  if (!res.ok) return null;
+  return res.json();
 }
 
 async function fetchSeason(tmdbId, seasonNum) {
-  const res = await fetch(`/api/tmdb?type=season&id=${tmdbId}&season=${seasonNum}`);
-  if (!res.ok) return null;
-  return res.json();
+  const res = await fetch(`/api/tmdb?type=season&id=${tmdbId}&season=${seasonNum}`);
+  if (!res.ok) return null;
+  return res.json();
 }
 
 if (!showInfo) {
-  content.innerHTML = "<p class='text-center text-red-500'>Show not found.</p>";
+  content.innerHTML = "<p class='loading'>Show not found.</p>";
 } else {
+  (async () => {
+    const showData = await fetchShow(id);
 
-  (async () => {
-    const showData = await fetchShow(id);
-
-    if (loadingIndicator) loadingIndicator.remove(); 
+    if (loadingIndicator) loadingIndicator.remove();
 
     if (!showData || showData.success === false) {
-        content.innerHTML = "<p class='text-center text-red-500'>Error loading series data.</p>";
-        return;
+      content.innerHTML = "<p class='loading'>Error loading series data.</p>";
+      return;
     }
 
-    content.innerHTML = `
-      <header class="text-center mb-8">
-        <h1 class="text-5xl font-bold mb-2 neon-text">${showData.name}</h1>
-        <p class="text-cyan-400 max-w-3xl mx-auto">${showData.overview}</p>
-      </header>
-    `;
+    content.innerHTML = `
+      <section class="hero">
+        <h1 class="hero-title">${showData.name}</h1>
+        <p class="hero-subtitle">${showData.overview || "No description available."}</p>
+      </section>
+    `;
 
-    const episodesContainer = document.createElement("div");
-    episodesContainer.className = "space-y-6";
-    content.appendChild(episodesContainer);
+    const episodesContainer = document.createElement("div");
+    content.appendChild(episodesContainer);
     
     const validSeasons = showData.seasons.filter(s => s.season_number >= 1);
     const seasonFetchPromises = validSeasons.map(season => fetchSeason(id, season.season_number));
     
-    // Concurrent fetching for performance
     const allSeasonData = await Promise.all(seasonFetchPromises);
 
-    for (let i = 0; i < validSeasons.length; i++) {
-      const season = validSeasons[i];
-      const seasonData = allSeasonData[i];
+    for (let i = 0; i < validSeasons.length; i++) {
+      const season = validSeasons[i];
+      const seasonData = allSeasonData[i];
 
-      if (!seasonData || !seasonData.episodes || seasonData.episodes.length === 0) continue; 
+      if (!seasonData || !seasonData.episodes || seasonData.episodes.length === 0) continue;
 
-      const seasonDiv = document.createElement("div");
-      seasonDiv.className = "mb-8";
-      seasonDiv.innerHTML = `<h2 class="text-3xl text-pink-500 mb-4">Season ${season.season_number}</h2>`;
-      episodesContainer.appendChild(seasonDiv);
+      const seasonSection = document.createElement("section");
+      seasonSection.className = "section";
+      seasonSection.innerHTML = `<h2 class="section-title">Season ${season.season_number}</h2>`;
+      
+      const epGrid = document.createElement("div");
+      epGrid.className = "grid";
+      seasonSection.appendChild(epGrid);
 
-      const epGrid = document.createElement("div");
-      epGrid.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6";
-      seasonDiv.appendChild(epGrid);
+      seasonData.episodes.forEach(ep => {
+        const epCard = document.createElement("div");
+        epCard.className = "card";
 
-      seasonData.episodes.forEach(ep => {
-        const epCard = document.createElement("div");
-        
-        // Applied the global interactive-card class
-        epCard.className = "interactive-card p-3 rounded-lg border border-pink-600 hover:border-red-500";
+        const epThumbnail = ep.still_path 
+          ? `https://image.tmdb.org/t/p/w500${ep.still_path}` 
+          : 'https://via.placeholder.com/500x280?text=No+Image';
 
-        const epThumbnail = ep.still_path ? `https://image.tmdb.org/t/p/w300${ep.still_path}` : 'https://via.placeholder.com/300x170?text=No+Image';
+        epCard.innerHTML = `
+          <div class="card-image-wrapper card-episode">
+            <img src="${epThumbnail}" alt="${ep.name}" class="card-image" loading="lazy">
+            <div class="card-badge">EP ${ep.episode_number}</div>
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">${ep.name}</h3>
+            <p class="card-description">${ep.overview || "No description available."}</p>
+            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">▶ Watch Now</button>
+          </div>
+        `;
 
-        epCard.innerHTML = `
-          <img src="${epThumbnail}" alt="${ep.name}" class="w-full rounded mb-2" loading="lazy">
-          <h3 class="text-xl font-bold text-red-500 mb-1">${ep.name}</h3>
-          <p class="text-gray-300 text-sm mb-2">${ep.overview ? ep.overview.substring(0,120) + "..." : "No description available."}</p>
-          <button class="bg-red-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded w-full">Watch</button>
-        `;
-
-        epCard.querySelector("button").addEventListener("click", () => {
-          if (!showInfo.imdb) {
-              alert("Error: IMDB ID not configured for this show.");
-              return;
+        epCard.querySelector("button").addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!showInfo.imdb) {
+            alert("Error: IMDB ID not configured for this show.");
+            return;
           }
-          const url = `https://vidfast.pro/tv/${showInfo.imdb}/${season.season_number}/${ep.episode_number}?autoPlay=true&autoNext=true`;
-          
-          iframePlayer.src = url;
-          videoPlayer.classList.remove("hidden");
-          window.scrollTo({ top: videoPlayer.offsetTop - 20, behavior: "smooth" });
-        });
+          const url = `https://vidfast.pro/tv/${showInfo.imdb}/${season.season_number}/${ep.episode_number}?autoPlay=true&autoNext=true`;
+          
+          iframePlayer.src = url;
+          videoPlayer.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+        });
 
-        epGrid.appendChild(epCard);
-      });
-    }
-  })();
+        epGrid.appendChild(epCard);
+      });
+
+      episodesContainer.appendChild(seasonSection);
+    }
+  })();
 }
 </script>
 </body>

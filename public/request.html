@@ -2,24 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Request - Violence Alley</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
 </head>
-<body class="bg-black text-white p-6 flex flex-col items-center">
-  <header class="mb-8 text-center">
-    <h1 class="text-4xl text-red-500 font-bold mb-2">Request a Series / Episode</h1>
-    <p class="text-gray-400">Submit your favorite Adult Swim shows to add!</p>
-  </header>
+<body>
 
-  <form class="w-full max-w-xl flex flex-col gap-4">
-    <input type="text" placeholder="Series Name" class="p-3 rounded-lg bg-gray-800 border border-red-500 text-white">
-    <input type="text" placeholder="Episode / Season (optional)" class="p-3 rounded-lg bg-gray-800 border border-red-500 text-white">
-    <textarea placeholder="Additional notes" class="p-3 rounded-lg bg-gray-800 border border-red-500 text-white"></textarea>
-    <button type="submit" class="p-3 bg-red-500 hover:bg-pink-600 rounded-lg font-bold">Submit Request</button>
-  </form>
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <a href="index.html" class="navbar-logo">Violence Alley</a>
+    <ul class="navbar-links" id="navbar-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#series">Series</a></li>
+      <li><a href="request.html" class="active">Requests</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="request.html" class="btn-primary">Submit Request</a>
+    </div>
+    <button class="mobile-menu-toggle" aria-controls="navbar-links" aria-expanded="false" aria-label="Toggle navigation">☰</button>
+  </div>
+</nav>
 
-  <footer class="mt-auto text-center mt-12">
-    <a href="index.html" class="text-cyan-400 underline">Back to Home</a>
-  </footer>
+<!-- Content -->
+<div class="container">
+  <section class="hero">
+    <h1 class="hero-title">Request a Series</h1>
+    <p class="hero-subtitle">Submit your favorite Adult Swim shows to add to our archive</p>
+  </section>
+
+  <section class="section">
+    <div style="max-width: 600px; margin: 0 auto;">
+      <form id="request-form" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="series-name" class="form-label">Series Name *</label>
+          <input 
+            type="text" 
+            id="series-name" 
+            name="series-name" 
+            class="form-input"
+            placeholder="e.g., Rick and Morty" 
+            required
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="episode-season" class="form-label">Episode / Season (optional)</label>
+          <input 
+            type="text" 
+            id="episode-season" 
+            name="episode-season" 
+            class="form-input"
+            placeholder="e.g., Season 2, Episode 5"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="notes" class="form-label">Additional Notes</label>
+          <textarea 
+            id="notes" 
+            name="notes" 
+            class="form-textarea"
+            placeholder="Any additional information..."
+          ></textarea>
+        </div>
+        
+        <button type="submit" class="btn-primary" style="width: 100%;">Submit Request</button>
+        
+        <div id="form-message" class="hidden" style="margin-top: 1rem; padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md); text-align: center;"></div>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p><a href="index.html">← Back to Home</a></p>
+    <p class="footer-copyright">© 2025 Violence Alley</p>
+  </div>
+</footer>
+
+<script>
+// Mobile Menu Toggle with Accessibility
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileToggle = document.querySelector('.mobile-menu-toggle');
+  const navLinks = document.querySelector('.navbar-links');
+  
+  if (mobileToggle && navLinks) {
+    mobileToggle.addEventListener('click', function() {
+      const isExpanded = navLinks.classList.toggle('mobile-active');
+      mobileToggle.setAttribute('aria-expanded', isExpanded);
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && navLinks.classList.contains('mobile-active')) {
+        navLinks.classList.remove('mobile-active');
+        mobileToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+});
+
+function handleSubmit(event) {
+  event.preventDefault();
+  const messageEl = document.getElementById('form-message');
+  const seriesName = document.getElementById('series-name').value;
+  
+  messageEl.textContent = `Thanks for requesting "${seriesName}"! We'll review your submission.`;
+  messageEl.style.color = 'var(--brand-secondary)';
+  messageEl.classList.remove('hidden');
+  
+  event.target.reset();
+  
+  setTimeout(() => {
+    messageEl.classList.add('hidden');
+  }, 5000);
+}
+</script>
 </body>
 </html>
