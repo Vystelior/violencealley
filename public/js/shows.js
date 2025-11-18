@@ -8,5 +8,6 @@ const showList = [
   { tmdb: 60625, imdb: "tt2861424" }, // rick and morty
   { tmdb: 709, imdb: "tt0437745" },   // robot chicken
   { tmdb: 539, imdb: "tt0457146" },   // squidbillies
-  { tmdb: 251, imdb: "tt0297494" }    // aqua teen hunger force
+  { tmdb: 251, imdb: "tt0297494" },   // aqua teen hunger force
+  { tmdb: 2723, imdb: "tt0278238" }   // samurai jack
 ];
