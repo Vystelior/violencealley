@@ -2,20 +2,63 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Violence Alley - Retro Adult Swim Archive</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Violence Alley - Retro Adult Swim Archive</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
+<style>
+/* Global Styling for Retro/Cyberpunk Aesthetic */
+body {
+    font-family: 'Courier New', monospace; 
+    background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
+    color: #f0f0f0; /* Default text color */
+    min-height: 100vh;
+}
+.neon-text {
+    color: #fff;
+    text-shadow: 
+        0 0 5px #ff0000, 
+        0 0 10px #ff0066, 
+        0 0 20px #ff00cc, 
+        0 0 40px rgba(255, 0, 102, 0.4);
+}
+.interactive-card {
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    background: #111; /* Dark background for cards */
+}
+.interactive-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(255, 0, 68, 0.8), 0 0 30px rgba(255, 0, 170, 0.5); 
+}
+/* Subtle Scanline Overlay for VHS feel */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        transparent 0,
+        rgba(255, 0, 68, 0.05) 1px,
+        transparent 2px
+    );
+    opacity: 0.1;
+    z-index: 9999;
+}
+</style>
 </head>
-<body class="bg-black text-red-500 p-6">
+<body class="p-6">
 <header class="text-center mb-8">
-  <h1 class="text-5xl font-bold mb-2 text-red-500">Violence Alley</h1>
+    <h1 class="text-5xl font-bold mb-2 neon-text">Violence Alley</h1>
   <p class="text-cyan-400">Retro Adult Swim streaming archive</p>
 </header>
 
 <main class="flex justify-center">
-  <input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-white mb-8">
+    <input id="search" type="text" placeholder="Search series..." class="w-full max-w-xl p-3 rounded-lg border-2 border-pink-600 bg-black text-cyan-400 mb-8" style="font-family: 'Courier New', monospace;">
 </main>
 <div id="show-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-    <p id="loading-message" class="col-span-full text-center text-lg text-cyan-400">Loading classic Adult Swim shows...</p>
+  <p id="loading-message" class="col-span-full text-center text-lg text-cyan-400">Loading classic Adult Swim shows...</p>
 </div>
 
 <footer class="text-center mt-12">
@@ -25,11 +68,10 @@
 
 <script src="js/shows.js"></script>
 <script>
-// FIX: Moved fetchShow function to a centralized utility file for better organization (see js/utils.js update below)
-// For now, keeping it here for simplicity:
+// NOTE: fetchShow and rendering logic remains the same (using concurrent fetching)
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
-  if (!res.ok) return null; // Handle API errors gracefully
+  if (!res.ok) return null;
   return res.json();
 }
 
@@ -38,18 +80,17 @@ const searchInput = document.getElementById("search");
 const loadingMessage = document.getElementById("loading-message");
 
 async function renderShows(filter="") {
-  showContainer.innerHTML = ""; // Clears existing cards
+  showContainer.innerHTML = "";
   
   if (loadingMessage) {
     loadingMessage.textContent = "Loading classic Adult Swim shows...";
     showContainer.appendChild(loadingMessage);
   }
 
-  // FIX: PERFORMANCE IMPROVEMENT - Use Promise.all to fetch all data concurrently
   const fetchPromises = showList.map(show => fetchShow(show.tmdb));
   const allShowData = await Promise.all(fetchPromises);
 
-  if (loadingMessage) loadingMessage.remove(); // Remove loading message after data arrives
+  if (loadingMessage) loadingMessage.remove(); 
   
   const filteredData = [];
 
@@ -57,39 +98,35 @@ async function renderShows(filter="") {
     const show = showList[i];
     const data = allShowData[i];
 
-    // Check for successful data fetch and filter
     if (!data || !data.name || !data.name.toLowerCase().includes(filter.toLowerCase())) continue;
     
     filteredData.push({ show, data });
   }
 
-  // Render filtered results
   filteredData.forEach(({ show, data }) => {
     const div = document.createElement("div");
-    div.className = "bg-gray-900 rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
+    // Applied the global interactive-card class
+    div.className = "interactive-card rounded-lg overflow-hidden border-2 border-pink-600 hover:border-red-500 hover:scale-105 transition-transform cursor-pointer";
     div.innerHTML = `
       <a href="series.html?id=${show.tmdb}">
-                <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170?text=Poster+Missing'}" alt="${data.name}" class="w-full" loading="lazy">
+        <img src="${data.poster_path ? "https://image.tmdb.org/t/p/w300"+data.poster_path : 'https://via.placeholder.com/300x170?text=Poster+Missing'}" alt="${data.name}" class="w-full" loading="lazy">
         <div class="p-4">
           <h2 class="text-xl font-bold text-red-500 mb-1">${data.name}</h2>
-                    <p class="text-gray-300 text-sm">${data.overview ? data.overview.substring(0,100) + "..." : "No description available."}</p>
+          <p class="text-gray-300 text-sm">${data.overview ? data.overview.substring(0,100) + "..." : "No description available."}</p>
         </div>
       </a>
     `;
     showContainer.appendChild(div);
   });
 
-  // Handle No Results
   if (filteredData.length === 0 && filter) {
       showContainer.innerHTML = `<p class="col-span-full text-center text-lg text-pink-500">No series found matching "${filter}".</p>`;
   }
 }
 
-// Initial render
 renderShows();
 
 searchInput.addEventListener("input", e => {
-    // FIX: Introduce a slight delay (debounce) to prevent excessive function calls while typing
     if (window.searchTimer) clearTimeout(window.searchTimer);
     window.searchTimer = setTimeout(() => {
         renderShows(e.target.value);
