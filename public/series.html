@@ -33,16 +33,15 @@
 
 <!-- Video Player Overlay -->
 <div id="video-player" class="video-player-overlay hidden">
-  <div class="video-player-container">
+  <div class="video-player-container" id="video-inner">
     <button class="video-player-close" onclick="closePlayer()">✕ Close</button>
-  <iframe 
-    id="player"
-    class="video-player-iframe"
-    src=""
-    allowfullscreen
-    allow="autoplay; fullscreen; picture-in-picture"
-  ></iframe>
-
+    <iframe 
+      id="player"
+      class="video-player-iframe"
+      src=""
+      allowfullscreen
+      allow="autoplay; fullscreen; picture-in-picture"
+    ></iframe>
   </div>
 </div>
 
@@ -55,7 +54,7 @@
 </footer>
 
 <script>
-// Mobile Menu Toggle with Accessibility
+// Mobile Menu Toggle
 document.addEventListener('DOMContentLoaded', function() {
   const mobileToggle = document.querySelector('.mobile-menu-toggle');
   const navLinks = document.querySelector('.navbar-links');
@@ -65,8 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const isExpanded = navLinks.classList.toggle('mobile-active');
       mobileToggle.setAttribute('aria-expanded', isExpanded);
     });
-    
-    // Close on Escape key
+
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && navLinks.classList.contains('mobile-active')) {
         navLinks.classList.remove('mobile-active');
@@ -84,14 +82,30 @@ const id = urlParams.get('id');
 const showInfo = showList.find(s => s.tmdb === parseInt(id));
 const content = document.getElementById("content");
 const videoPlayer = document.getElementById("video-player");
+const videoInner = document.getElementById("video-inner");
 const loadingIndicator = document.getElementById("loading-indicator");
 const iframePlayer = document.getElementById("player");
 
+// Close Player Function
 function closePlayer() {
   videoPlayer.classList.add("hidden");
   iframePlayer.src = "";
   document.body.style.overflow = "auto";
 }
+
+// Close on Outside Click
+videoPlayer.addEventListener("click", (e) => {
+  if (!videoInner.contains(e.target)) {
+    closePlayer();
+  }
+});
+
+// Close on Escape Key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !videoPlayer.classList.contains("hidden")) {
+    closePlayer();
+  }
+});
 
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
@@ -127,11 +141,11 @@ if (!showInfo) {
 
     const episodesContainer = document.createElement("div");
     content.appendChild(episodesContainer);
-    
+
     const validSeasons = showData.seasons.filter(s => s.season_number >= 1);
-    const seasonFetchPromises = validSeasons.map(season => fetchSeason(id, season.season_number));
-    
-    const allSeasonData = await Promise.all(seasonFetchPromises);
+    const allSeasonData = await Promise.all(
+      validSeasons.map(season => fetchSeason(id, season.season_number))
+    );
 
     for (let i = 0; i < validSeasons.length; i++) {
       const season = validSeasons[i];
@@ -173,8 +187,8 @@ if (!showInfo) {
             alert("Error: IMDB ID not configured for this show.");
             return;
           }
+
           const url = `https://vidfast.pro/tv/${showInfo.imdb}/${season.season_number}/${ep.episode_number}?autoPlay=true&autoNext=true`;
-          
           iframePlayer.src = url;
           videoPlayer.classList.remove("hidden");
           document.body.style.overflow = "hidden";
