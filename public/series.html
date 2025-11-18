@@ -142,6 +142,10 @@ if (!showInfo) {
     const episodesContainer = document.createElement("div");
     content.appendChild(episodesContainer);
 
+    const showPosterFallback = showData.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${showData.poster_path}`
+      : 'https://via.placeholder.com/500x280?text=No+Image';
+
     const validSeasons = showData.seasons.filter(s => s.season_number >= 1);
     const allSeasonData = await Promise.all(
       validSeasons.map(season => fetchSeason(id, season.season_number))
@@ -167,7 +171,7 @@ if (!showInfo) {
 
         const epThumbnail = ep.still_path 
           ? `https://image.tmdb.org/t/p/w500${ep.still_path}` 
-          : 'https://via.placeholder.com/500x280?text=No+Image';
+          : showPosterFallback;
 
         epCard.innerHTML = `
           <div class="card-image-wrapper card-episode">

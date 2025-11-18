@@ -9,9 +9,9 @@
   --bg-hover: #283544;
   
   /* Brand Colors */
-  --brand-primary: #FF4F81;
+  --brand-primary: #DC143C;
   --brand-secondary: #29E6A7;
-  --brand-accent: #7B61FF;
+  --brand-accent: #FF1744;
   
   /* Neutral Colors */
   --text-primary: #FFFFFF;
@@ -141,7 +141,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: #FF3366;
+  background: #B10026;
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -205,7 +205,7 @@ body {
 .search-input:focus {
   outline: none;
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(255, 79, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
 }
 
 .search-input::placeholder {
@@ -397,7 +397,7 @@ body {
 }
 
 .video-player-close:hover {
-  background: #FF3366;
+  background: #B10026;
   transform: scale(1.05);
 }
 
@@ -438,7 +438,7 @@ body {
 .form-textarea:focus {
   outline: none;
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(255, 79, 129, 0.1);
+  box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.1);
 }
 
 .form-textarea {

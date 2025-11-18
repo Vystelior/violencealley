@@ -8,6 +8,8 @@ Violence Alley is a retro Adult Swim streaming archive application with a cyberp
 - Migrated from Vercel serverless deployment to Replit environment
 - Unified styling system with shared CSS file for consistency
 - Enhanced request form with better UX and cyberpunk styling
+- Changed color scheme from pink to red (#DC143C) for violence-themed aesthetic
+- Fixed Xavier Renegade Angel season 2 thumbnail display by using show poster fallback
 
 ## User Preferences
 
@@ -26,14 +28,19 @@ The frontend consists of three main pages:
 - `series.html` - Individual series viewing page with video player
 - `request.html` - User request submission form
 
-**Styling Approach**: Universal CSS file (`public/css/style.css`) provides consistent retro cyberpunk aesthetic across all pages with:
-- Neon text effects with red/pink glow (#ff0000, #ff0066, #ff00cc)
-- Dark gradient backgrounds (#0b0b0b to #1a1a1a)
-- Scanline overlay effect for VHS authenticity
-- Interactive card hover effects with neon shadows
-- Form elements with pink borders and cyan text
-- Monospace "Courier New" font family throughout
+**Styling Approach**: Universal CSS file (`public/css/style.css`) provides consistent modern dark theme across all pages with:
+- Violence-themed crimson red accents (#DC143C primary, #B10026 hover)
+- Dark gradient backgrounds (#0F1115 to #283544)
+- Interactive card hover effects with red borders
+- Form elements with red borders and focus rings
+- Modern sans-serif font family throughout
 - Smooth transitions and hover effects on buttons and links
+
+**Thumbnail Fallback Logic**: Episode cards in `series.html` use a robust fallback system:
+- Primary: Episode still image from TMDB (`still_path`)
+- Fallback: Show poster when episode still is unavailable
+- Final fallback: Placeholder image
+- This ensures Xavier Renegade Angel season 2 and other shows with missing episode stills display properly
 
 **Problem Addressed**: Creating an immersive retro viewing experience that matches Adult Swim's distinctive aesthetic while maintaining code consistency
 
