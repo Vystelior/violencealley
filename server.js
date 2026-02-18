@@ -14,13 +14,12 @@ app.use((req, res, next) => {
 
 // API endpoint - converted from Vercel serverless function
 app.get('/api/tmdb', async (req, res) => {
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
   const { type, id, season } = req.query;
   const API_KEY = process.env.TMDB_API_KEY;
+
+  if (!id || Number.isNaN(Number(id))) {
+    return res.status(400).json({ error: 'A valid numeric id is required' });
+  }
 
   if (!API_KEY) {
     return res.status(500).json({ error: 'TMDB API key not configured' });
@@ -30,13 +29,21 @@ app.get('/api/tmdb', async (req, res) => {
   if (type === 'tv') {
     url = `https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`;
   } else if (type === 'season') {
+    if (!season || Number.isNaN(Number(season))) {
+      return res.status(400).json({ error: 'A valid numeric season is required for season requests' });
+    }
+
     url = `https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${API_KEY}&language=en-US`;
   } else {
     return res.status(400).json({ error: 'Invalid type provided' });
   }
 
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const response = await fetch(url, { signal: controller.signal }).finally(() => {
+      clearTimeout(timeout);
+    });
     
     // Better check for non-200 responses from TMDB
     if (!response.ok) {
@@ -46,6 +53,10 @@ app.get('/api/tmdb', async (req, res) => {
     const data = await response.json();
     res.status(200).json(data);
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'TMDB API request timed out' });
+    }
+
     console.error("API Fetch Error:", error);
     return res.status(500).json({ error: 'Internal server error while fetching data' });
   }
