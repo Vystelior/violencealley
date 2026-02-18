@@ -81,6 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script src="js/shows.js"></script>
 <script>
+const SHOW_CACHE_KEY = "va_show_cache_v1";
+const SHOW_CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
+
 async function fetchShow(tmdbId) {
   const res = await fetch(`/api/tmdb?type=tv&id=${tmdbId}`);
   if (!res.ok) return null;
@@ -90,47 +93,69 @@ async function fetchShow(tmdbId) {
 const showContainer = document.getElementById("show-list");
 const searchInput = document.getElementById("search");
 const loadingMessage = document.getElementById("loading-message");
+let cachedShows = null;
+let lastFilter = "";
 
-async function renderShows(filter = "") {
+function normalizeFilter(value = "") {
+  return value.trim().toLowerCase();
+}
+
+function getStoredShows() {
+  try {
+    const raw = localStorage.getItem(SHOW_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.timestamp || !Array.isArray(parsed?.shows)) return null;
+    if (Date.now() - parsed.timestamp > SHOW_CACHE_TTL_MS) return null;
+
+    return parsed.shows;
+  } catch (error) {
+    console.warn("Failed to read show cache", error);
+    return null;
+  }
+}
+
+function storeShows(shows) {
+  try {
+    localStorage.setItem(SHOW_CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      shows
+    }));
+  } catch (error) {
+    console.warn("Failed to write show cache", error);
+  }
+}
+
+function mergeShowData(show, data) {
+  if (!data || !data.name) return null;
+  return { show, data };
+}
+
+function renderCards(filteredData, filter) {
   showContainer.innerHTML = "";
-  
-  if (loadingMessage) {
-    loadingMessage.textContent = "Loading series...";
-    showContainer.appendChild(loadingMessage);
-  }
-
-  const fetchPromises = showList.map(show => fetchShow(show.tmdb));
-  const allShowData = await Promise.all(fetchPromises);
-
-  if (loadingMessage) loadingMessage.remove();
-  
-  const filteredData = [];
-
-  for (let i = 0; i < showList.length; i++) {
-    const show = showList[i];
-    const data = allShowData[i];
-
-    if (!data || !data.name || !data.name.toLowerCase().includes(filter.toLowerCase())) continue;
-    
-    filteredData.push({ show, data });
-  }
 
   if (filteredData.length === 0) {
-    showContainer.innerHTML = `<p class="loading">No series found matching "${filter}"</p>`;
+    const message = filter
+      ? `No series found matching "${filter}"`
+      : "No series available right now.";
+    showContainer.innerHTML = `<p class="loading">${message}</p>`;
     return;
   }
+
+  const fragment = document.createDocumentFragment();
 
   filteredData.forEach(({ show, data }) => {
     const card = document.createElement("div");
     card.className = "card";
-    
-    const posterUrl = data.poster_path 
-      ? `https://image.tmdb.org/t/p/w500${data.poster_path}` 
+
+    const posterUrl = data.poster_path
+      ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
       : 'https://via.placeholder.com/500x750?text=No+Poster';
-    
+
     const year = data.first_air_date ? new Date(data.first_air_date).getFullYear() : '';
     const seasons = data.number_of_seasons ? `${data.number_of_seasons} Season${data.number_of_seasons > 1 ? 's' : ''}` : '';
-    
+
     card.innerHTML = `
       <a href="series.html?id=${show.tmdb}">
         <div class="card-image-wrapper card-poster">
@@ -146,18 +171,72 @@ async function renderShows(filter = "") {
         </div>
       </a>
     `;
-    
-    showContainer.appendChild(card);
+
+    fragment.appendChild(card);
+  });
+
+  showContainer.appendChild(fragment);
+}
+
+function filterShows(filter = "") {
+  const normalizedFilter = normalizeFilter(filter);
+  if (!cachedShows) return [];
+
+  return cachedShows.filter(({ data }) =>
+    data.name.toLowerCase().includes(normalizedFilter)
+  );
+}
+
+function renderShows(filter = "") {
+  lastFilter = filter;
+  renderCards(filterShows(filter), filter.trim());
+}
+
+async function refreshShowsFromApi() {
+  const fetchPromises = showList.map(show => fetchShow(show.tmdb));
+  const allShowData = await Promise.all(fetchPromises);
+
+  const freshShows = showList
+    .map((show, i) => mergeShowData(show, allShowData[i]))
+    .filter(Boolean);
+
+  cachedShows = freshShows;
+  storeShows(freshShows);
+  renderShows(lastFilter);
+}
+
+function initShows() {
+  const storedShows = getStoredShows();
+  if (storedShows) {
+    cachedShows = storedShows;
+    renderShows();
+    refreshShowsFromApi().catch((error) => {
+      console.error("Unable to refresh shows", error);
+    });
+    return;
+  }
+
+  if (loadingMessage) {
+    loadingMessage.textContent = "Loading series...";
+    showContainer.innerHTML = "";
+    showContainer.appendChild(loadingMessage);
+  }
+
+  refreshShowsFromApi().catch((error) => {
+    console.error("Unable to load shows", error);
+    showContainer.innerHTML = '<p class="loading">Unable to load series right now. Please try again.</p>';
+  }).finally(() => {
+    if (loadingMessage) loadingMessage.remove();
   });
 }
 
-renderShows();
+initShows();
 
 searchInput.addEventListener("input", e => {
   if (window.searchTimer) clearTimeout(window.searchTimer);
   window.searchTimer = setTimeout(() => {
     renderShows(e.target.value);
-  }, 300);
+  }, 200);
 });
 </script>
 </body>
